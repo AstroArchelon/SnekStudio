@@ -1,5 +1,9 @@
 extends Mod_Base
 
+var target_ip : String = "127.0.0.1"
+var target_port : int = 39539
+var vmc_sender_enabled : bool = false
+
 # List from the VRM spec:
 # https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.bone.schema.json
 var _humanoid_bone_list : PackedStringArray = [
@@ -32,10 +36,24 @@ var _humanoid_bone_list : PackedStringArray = [
 var _humanoid_bone_dict_lowercase_to_upper_first_letter : Dictionary = {}
 
 func _ready() -> void:
+	add_tracked_setting("target_ip", "Reciever IP address")
+	add_tracked_setting("target_port", "Reciever port")
+	add_tracked_setting("vmc_sender_enabled", "Sender enabled")
+
 	for bone_name in _humanoid_bone_list:
 		var bone_name_upper_first_letter : String = bone_name[0].to_upper() + bone_name.substr(1)
 		_humanoid_bone_dict_lowercase_to_upper_first_letter[bone_name.to_lower()] = \
 			bone_name_upper_first_letter
+
+	update_settings_ui()
+
+func load_after(_settings_old : Dictionary, _settings_new : Dictionary) -> void:
+	$KiriOSClient.change_port_and_ip(target_port, target_ip)
+	if _settings_old["vmc_sender_enabled"] != _settings_new["vmc_sender_enabled"]:
+		if vmc_sender_enabled:
+			$KiriOSClient.start_client()
+		else:
+			$KiriOSClient.stop_client()
 
 func _physics_process(delta: float) -> void:
 	var skel : Skeleton3D = get_skeleton()
