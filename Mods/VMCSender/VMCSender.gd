@@ -62,13 +62,40 @@ func _physics_process(delta: float) -> void:
 	for bone_name in _humanoid_bone_list:
 		var bone_name_lower : String = bone_name.to_lower()
 		var bone_name_upper_first_letter : String = _humanoid_bone_dict_lowercase_to_upper_first_letter[bone_name_lower]
-		var bone_index : int = skel.find_bone(bone_name_upper_first_letter)
+		var actual_bone_name : String = bone_name_upper_first_letter
+
+		# We may have to rename some thumb bone names, depending on whether we
+		# have a VRM 1.0 or 0.0 model.
+		if actual_bone_name.begins_with("LeftThumb") or actual_bone_name.begins_with("RightThumb"):
+			if skel.find_bone("LeftThumbMetacarpal") != -1:
+				# We have the metacarpal bone, so assume VRM 1.0.
+				var bone_without_side : String = ""
+				var bone_side : String = ""
+				if actual_bone_name.begins_with("Left"):
+					bone_without_side = actual_bone_name.substr(4)
+					bone_side = "Left"
+				else:
+					bone_without_side = actual_bone_name.substr(5)
+					bone_side = "Right"
+
+				var converted_bone_without_side : String = bone_without_side
+				if bone_without_side == "ThumbProximal":
+					converted_bone_without_side = "ThumbMetacarpal"
+				if bone_without_side == "ThumbIntermediate":
+					converted_bone_without_side = "ThumbProximal"
+
+				actual_bone_name = bone_side + converted_bone_without_side
+
+		var bone_index : int = skel.find_bone(actual_bone_name)
 		if bone_index != -1:
 
-			var global_pose : Transform3D = skel.get_bone_global_pose(bone_index)
+			var global_rest : Transform3D = skel.get_bone_global_rest(bone_index)
+			var rest : Transform3D = skel.get_bone_rest(bone_index)
+			var pose : Transform3D = skel.get_bone_pose(bone_index)
 
-			var rotation_quat : Quaternion = global_pose.basis.get_rotation_quaternion()
-			var origin : Vector3 = global_pose.origin
+			var transformed_pose : Transform3D = global_rest * rest.inverse() * pose * global_rest.inverse()
+			var rotation_quat : Quaternion = transformed_pose.basis.get_rotation_quaternion()
+			var origin : Vector3 = pose.origin
 
 			# Shuffle stuff around into the coordinate space that VMC expects.
 			rotation_quat.y *= -1
