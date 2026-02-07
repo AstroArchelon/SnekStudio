@@ -271,14 +271,13 @@ func scene_init():
 
 	# Set the head tracker to match the model's head position.
 	var head_bone_index = get_skeleton().find_bone("Head")
-	
-	if head_bone_index == -1:
-		for i in range(0, get_skeleton().get_bone_count()):
-			print(i, ": ", get_skeleton().get_bone_name(i))
-		assert(false)
-	
-	$Head.global_transform = get_skeleton().get_bone_global_rest(
-		head_bone_index)
+
+	if head_bone_index != -1:
+		$Head.global_transform = get_skeleton().get_bone_global_rest(
+			head_bone_index)
+	else:
+		# We have to guess.
+		$Head.global_transform.origin.y = 1.6
 
 	_reinit()
 

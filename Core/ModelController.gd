@@ -31,7 +31,12 @@ func load_vrm(path) -> Node3D:
 		push_error("Failed to load ", path, ": file does not exist.")
 		return null
 
-
+	# VRM 1.x extensions have to be loaded in a specific order, and in a way
+	# that puts them before the internal extension that converts from stuff like
+	# ImporterMeshInstance to MeshInstance3D.
+	#
+	# Yes, there is an internal extension that does that and it makes it very
+	# confusing when the runtime loader doesn't act like the editor loader.
 	var extension_paths : PackedStringArray = [
 		"res://addons/godot-vrm/1.0/VRMC_vrm.gd",
 		"res://addons/godot-vrm/1.0/VRMC_node_constraint.gd",
@@ -39,42 +44,49 @@ func load_vrm(path) -> Node3D:
 		"res://addons/godot-vrm/1.0/VRMC_materials_hdr_emissiveMultiplier.gd",
 		"res://addons/godot-vrm/1.0/VRMC_materials_mtoon.gd"
 	]
+
+	# We're going to load these all with first_priotity = true in the call to
+	# register_gltf_document_extension, so we actually need to reverse the order
+	# here that they end up in the correct order in the final extension list.
 	extension_paths.reverse()
 
-	var extensions : Array = []
+	# For cleanup later.
+	var extensions: Array = []
 
+	# Load all VRM 1.x extensions and register them, in reverse order.
 	for extension_path in extension_paths:
 		var extension = load(extension_path).new()
 		assert(extension != null)
-		print("Adding extension: ", extension)
 		GLTFDocument.register_gltf_document_extension(extension, true)
 		extensions.append(extension)
 
-	# Attempt to load file.
-	# FIXME: Determine of the flags used are still needed. Remove them if not.
-	var gltf: GLTFDocument = GLTFDocument.new()
+	# Load up the VRM 0.0 extension.
 	var vrm_extension: GLTFDocumentExtension = load("res://addons/godot-vrm/vrm_extension.gd").new()
 	GLTFDocument.register_gltf_document_extension(vrm_extension, true)
 
+	var gltf: GLTFDocument = GLTFDocument.new()
 	var state: GLTFState = GLTFState.new()
-	state.handle_binary_image = GLTFState.HANDLE_BINARY_EMBED_AS_UNCOMPRESSED
 
+	# These options are copied from the VRM addon's loader.
 	var options : Dictionary = {}
 	state.set_additional_data(&"vrm/head_hiding_method", vrm_constants.HeadHidingSetting.IgnoreHeadHiding as vrm_constants.HeadHidingSetting)
 	state.set_additional_data(&"vrm/first_person_layers", options.get(&"vrm/only_if_head_hiding_uses_layers/first_person_layers", 2) as int)
 	state.set_additional_data(&"vrm/third_person_layers", options.get(&"vrm/only_if_head_hiding_uses_layers/third_person_layers", 4) as int)
-	# HANDLE_BINARY_EMBED_AS_BASISU crashes on some files in 4.0 and 4.1
-	state.handle_binary_image = GLTFState.HANDLE_BINARY_EMBED_AS_UNCOMPRESSED  # GLTFState.HANDLE_BINARY_EXTRACT_TEXTURES
+	state.handle_binary_image = GLTFState.HANDLE_BINARY_EMBED_AS_UNCOMPRESSED
 
-	var flags = 1 | 16 | 8 | 2
+	# We need to hardcode these flag numbers here because we don't have access
+	# to EditorSceneFormatImporter at runtime. I know it's annoying, but this
+	# one is on the Godot devs.
+	var flags: int = 1 | 16 | 8 | 2
 		# 1  EditorSceneFormatImporter.IMPORT_SCENE
-		# 2  EditorSceneFormatImporter.IMPORT_ANIMATION) #16 #EditorSceneFormatImporter.IMPORT_USE_NAMED_SKIN_BINDS)
-		# 8  EditorSceneFormatImporter.IMPORT_GENERATE_TANGENT_ARRAYS |
+		# 2  EditorSceneFormatImporter.IMPORT_ANIMATION
+		# 8  EditorSceneFormatImporter.IMPORT_GENERATE_TANGENT_ARRAYS
 		# 16 EditorSceneFormatImporter.IMPORT_USE_NAMED_SKIN_BINDS
 
 	print("FLAGS: ", flags)
 	print("EXTENSIONS: ", GLTFDocument.get_supported_gltf_extensions())
-	
+
+	# Attempt to load file.
 	var err = gltf.append_from_file(path, state, flags)
 
 	var generated_scene = null
@@ -98,8 +110,8 @@ func load_vrm(path) -> Node3D:
 	# Cleanup.
 	GLTFDocument.unregister_gltf_document_extension(vrm_extension)
 
+	# Cleanup all the other extensions.
 	for extension in extensions:
-		print("Removing extension: ", extension)
 		assert(extension != null)
 		GLTFDocument.unregister_gltf_document_extension(extension)
 
@@ -194,8 +206,8 @@ func reset_skeleton_to_rest_pose() -> void:
 ## Reset all the blend shapes to their neutral state.
 func reset_blend_shapes() -> void:
 	var anim_player : AnimationPlayer = $Model.find_child("AnimationPlayer", false, false)
-	
-	# FIXME: This is having issues in 4.4.
+
+	# FIXME: This is having issues starting in 4.4. Possibly internal Godot bug?
 	if anim_player:
 		anim_player.play("RESET")
 		anim_player.advance(0)

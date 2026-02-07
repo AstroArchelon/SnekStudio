@@ -43,7 +43,6 @@ static func apply_animations(model, shape_dict):
 	if anim_player:
 
 		# Find all the "rest" values to blend with.
-		
 		if anim_player.has_animation("RESET"):
 			var rest_anim : Animation = anim_player.get_animation("RESET")
 			if rest_anim:
