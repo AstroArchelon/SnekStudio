@@ -6,7 +6,7 @@ var vmc_sender_enabled : bool = false
 
 # List from the VRM spec:
 # https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.bone.schema.json
-var _humanoid_bone_list : PackedStringArray = [
+const _humanoid_bone_list : PackedStringArray = [
 	"hips",
 	"leftUpperLeg", "rightUpperLeg",
 	"leftLowerLeg", "rightLowerLeg",
@@ -30,6 +30,25 @@ var _humanoid_bone_list : PackedStringArray = [
 	"rightRingProximal", "rightRingIntermediate", "rightRingDistal",
 	"rightLittleProximal", "rightLittleIntermediate", "rightLittleDistal",
 	"upperChest"]
+
+const _vrm_1_to_0_blend_shape_map : Dictionary = {
+	"neutral" : "Neutral",
+	"aa" : "A",
+	"ih" : "I",
+	"ou" : "U",
+	"ee" : "E",
+	"oh" : "O",
+	"blink" : "Blink",
+	"happy" : "Joy",
+	"angry" : "Angry",
+	"sad" : "Sorrow",
+	"relaxed" : "Fun",
+	"lookUp" : "LookUp",
+	"lookDown" : "LookDown",
+	"lookLeft" : "LookLeft",
+	"lookRight" : "LookRight",
+	"blinkLeft" : "Blink_L",
+	"blinkRight" : "Blink_R" }
 
 # These are the names to match, along with their first-letter-uppercased
 # versions.
@@ -106,3 +125,15 @@ func _physics_process(delta: float) -> void:
 				bone_name_upper_first_letter,
 				origin.x, origin.y, origin.z,
 				rotation_quat.x, rotation_quat.y, rotation_quat.z, rotation_quat.w])
+
+	var blend_shapes_to_apply : Dictionary = get_global_mod_data("BlendShapes")
+	for shape_name in blend_shapes_to_apply:
+		var shape_name_mapped : String = shape_name
+		if shape_name_mapped in _vrm_1_to_0_blend_shape_map:
+			shape_name_mapped = _vrm_1_to_0_blend_shape_map[shape_name]
+
+		$KiriOSClient.send_osc_message("/VMC/Ext/Blend/Val", "sf", [
+			shape_name_mapped,
+			blend_shapes_to_apply[shape_name]])
+
+	$KiriOSClient.send_osc_message("/VMC/Ext/Blend/Apply", "", [])
