@@ -83,9 +83,6 @@ func load_vrm(path) -> Node3D:
 		# 8  EditorSceneFormatImporter.IMPORT_GENERATE_TANGENT_ARRAYS
 		# 16 EditorSceneFormatImporter.IMPORT_USE_NAMED_SKIN_BINDS
 
-	print("FLAGS: ", flags)
-	print("EXTENSIONS: ", GLTFDocument.get_supported_gltf_extensions())
-
 	# Attempt to load file.
 	var err = gltf.append_from_file(path, state, flags)
 

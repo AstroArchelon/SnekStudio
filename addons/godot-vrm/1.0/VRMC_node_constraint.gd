@@ -6,18 +6,12 @@ const bone_node_constraint_applier = preload("../node_constraint/bone_node_const
 
 
 func _import_preflight(_state: GLTFState, extensions: PackedStringArray) -> Error:
-
-	print("VRMC_node_constraint.gd _import_preflight")
-
 	if extensions.has("VRMC_node_constraint"):
 		return OK
 	return ERR_SKIP
 
 
 func _parse_node_extensions(gltf_state: GLTFState, gltf_node: GLTFNode, node_extensions: Dictionary) -> Error:
-	
-	print("VRMC_node_constraint.gd _parse_node_extensions")
-	
 	if not node_extensions.has("VRMC_node_constraint"):
 		return OK
 	var constraint_ext: Dictionary = node_extensions["VRMC_node_constraint"]
@@ -27,9 +21,6 @@ func _parse_node_extensions(gltf_state: GLTFState, gltf_node: GLTFNode, node_ext
 
 
 func _import_post_parse(gltf_state: GLTFState) -> Error:
-	
-	print("VRMC_node_constraint.gd _import_post_parse")
-	
 	var applier: bone_node_constraint_applier = bone_node_constraint_applier.new()
 	applier.name = &"BoneNodeConstraintApplier"
 	gltf_state.set_additional_data(&"BoneNodeConstraintApplier", applier)
@@ -37,9 +28,6 @@ func _import_post_parse(gltf_state: GLTFState) -> Error:
 
 
 func _import_post(gltf_state: GLTFState, root: Node) -> Error:
-
-	print("VRMC_node_constraint.gd _import_post")
-
 	# Add the constraint applier to the real root, next to the AnimationPlayer.
 	var applier: bone_node_constraint_applier = gltf_state.get_additional_data(&"BoneNodeConstraintApplier")
 	root.add_child(applier)
@@ -64,11 +52,6 @@ func my_import_node(gltf_state: GLTFState, gltf_node: GLTFNode, json: Dictionary
 	# Set up the source node.
 	constraint.source_node = gltf_state.get_scene_node(constraint.source_node_index)
 	constraint.source_rest_transform = constraint.source_node.transform
-	
-	# @kiri
-	print("KIRI: constraint source: ", gltf_nodes[constraint.source_node_index].rotation)
-	print("KIRI: constraint dest:   ", gltf_nodes[constraint.target_node_index].rotation)
-	
 	if gltf_nodes[constraint.source_node_index].skeleton != -1:
 		var godot_skel: Skeleton3D = gltf_skeletons[gltf_nodes[constraint.source_node_index].skeleton].get_godot_skeleton()
 		var source_bone_name: String = gltf_nodes[constraint.source_node_index].resource_name

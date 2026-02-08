@@ -26,9 +26,6 @@ func _get_import_flags() -> int:
 
 
 func _import_scene(path: String, flags: int, options: Dictionary) -> Object:
-	
-	print("INCOMING FLAGS: ", flags)
-	
 	print("Import VRM: " + path + " ----------------------")
 	var gltf: GLTFDocument = GLTFDocument.new()
 	flags |= EditorSceneFormatImporter.IMPORT_USE_NAMED_SKIN_BINDS
@@ -40,10 +37,6 @@ func _import_scene(path: String, flags: int, options: Dictionary) -> Object:
 	state.set_additional_data(&"vrm/third_person_layers", options.get(&"vrm/only_if_head_hiding_uses_layers/third_person_layers", 4) as int)
 	# HANDLE_BINARY_EMBED_AS_BASISU crashes on some files in 4.0 and 4.1
 	state.handle_binary_image = GLTFState.HANDLE_BINARY_EMBED_AS_UNCOMPRESSED  # GLTFState.HANDLE_BINARY_EXTRACT_TEXTURES
-	print("OUTGOING FLAGS: ", flags)
-	
-	print("EXTENSIONS orig: ", GLTFDocument.get_supported_gltf_extensions())
-
 	var err = gltf.append_from_file(path, state, flags)
 	if err != OK:
 		gltf.unregister_gltf_document_extension(vrm_extension)

@@ -14,10 +14,7 @@ var _mods_loaded : bool = false
 var subwindows : Array[BasicSubWindow] = []
 
 func _process(_delta):
-	
-	# FIXME: Remove this!
 	$DebugMesh.mesh.clear_surfaces()
-	
 	_set_process_order()
 
 func _set_process_order():
@@ -778,3 +775,11 @@ static func get_added_mods_locations() -> PackedStringArray:
 		for global_path : String in paths_global:
 			paths_localized.append(ProjectSettings.localize_path(global_path))
 	return paths_localized
+
+## Get an ImmediateMesh for drawing debug lines to. Simple material with a
+## shader that uses vertex data.
+##
+## The mesh is cleared every frame, so this is for immediate-mode style debug
+## rendering.
+func get_debug_mesh() -> ImmediateMesh:
+	return $DebugMesh.mesh

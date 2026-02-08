@@ -228,9 +228,6 @@ func _add_vrm_nodes_to_skin(obj: Dictionary) -> bool:
 
 
 func _import_preflight(state: GLTFState, extensions = PackedStringArray()) -> Error:
-
-	print("VRMC_springBone.gd _import_preflight")
-
 	if not extensions.has("VRMC_springBone"):
 		return ERR_INVALID_DATA
 	var gltf_json_parsed: Dictionary = state.json
@@ -242,9 +239,6 @@ func _import_preflight(state: GLTFState, extensions = PackedStringArray()) -> Er
 
 # Called when the node enters the scene tree for the first time.
 func _import_post(state: GLTFState, root_node: Node):
-
-	print("VRMC_springBone.gd _import_post")
-
 	var gltf_json: Dictionary = state.json
 	var vrm_extension: Dictionary = gltf_json["extensions"]["VRMC_springBone"]
 	if vrm_extension.get("specVersion", "") != "1.0":

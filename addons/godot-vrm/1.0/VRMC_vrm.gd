@@ -378,7 +378,10 @@ func _create_animation_player(animplayer: AnimationPlayer, vrm_extension: Dictio
 	for i in range(meshes.size()):
 		var gltfmesh: GLTFMesh = meshes[i]
 		for j in range(gltfmesh.mesh.get_surface_count()):
-			material_idx_to_mesh_and_surface_idx[material_to_idx[gltfmesh.mesh.get_surface_material(j)]] = [i, j]
+			# There may be gaps in the dictionary here if stand-in materials
+			# were created for surfaces with no material defined.
+			if material_to_idx.has(gltfmesh.mesh.get_surface_material(j)):
+				material_idx_to_mesh_and_surface_idx[material_to_idx[gltfmesh.mesh.get_surface_material(j)]] = [i, j]
 
 	for i in range(nodes.size()):
 		var gltfnode: GLTFNode = nodes[i]
@@ -973,9 +976,6 @@ func _export_post(gstate: GLTFState) -> Error:
 
 
 func _import_preflight(gstate: GLTFState, extensions: PackedStringArray = PackedStringArray()) -> Error:
-	
-	print("VRMC_vrm.gd _import_preflight")
-	
 	if not extensions.has("VRMC_vrm"):
 		return ERR_SKIP
 	if typeof(gstate.get_additional_data(&"vrm/already_processed")) != TYPE_NIL:
@@ -1007,13 +1007,6 @@ func _import_post_parse(state: GLTFState) -> Error:
 
 
 func _import_post(gstate: GLTFState, node: Node) -> Error:
-
-	print("VRMC_vrm.gd _import_post")
-
-	var nodes = gstate.nodes
-	for nodeindex in range(len(nodes)):
-		print(nodeindex, nodes[nodeindex])
-
 	var root_node: Node = node
 
 	var gltf_json: Dictionary = gstate.json

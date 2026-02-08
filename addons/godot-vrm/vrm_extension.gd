@@ -879,9 +879,6 @@ func _add_vrm_nodes_to_skin(obj: Dictionary) -> bool:
 
 
 func _import_preflight(gstate: GLTFState, extensions: PackedStringArray = PackedStringArray(), psa2: Variant = null) -> Error:
-
-	print("vrm_extension.gd _import_preflight")
-
 	if extensions.has("VRMC_vrm"):
 		# VRM 1.0 file. Do not parse as a VRM 0.0.
 		return ERR_INVALID_DATA
