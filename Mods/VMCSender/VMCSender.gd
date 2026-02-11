@@ -71,7 +71,7 @@ func load_after(_settings_old : Dictionary, _settings_new : Dictionary) -> void:
 		else:
 			$KiriOSClient.stop_client()
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	var skel : Skeleton3D = get_skeleton()
 
 	#for bone_index in range(0, skel.get_bone_count()):
@@ -80,25 +80,10 @@ func _physics_process(delta: float) -> void:
 
 		# We may have to rename some thumb bone names, depending on whether we
 		# have a VRM 1.0 or 0.0 model.
-		if actual_bone_name.begins_with("LeftThumb") or actual_bone_name.begins_with("RightThumb"):
-			if skel.find_bone("LeftThumbMetacarpal") != -1:
-				# We have the metacarpal bone, so assume VRM 1.0.
-				var bone_without_side : String = ""
-				var bone_side : String = ""
-				if actual_bone_name.begins_with("Left"):
-					bone_without_side = actual_bone_name.substr(4)
-					bone_side = "Left"
-				else:
-					bone_without_side = actual_bone_name.substr(5)
-					bone_side = "Right"
-
-				var converted_bone_without_side : String = bone_without_side
-				if bone_without_side == "ThumbProximal":
-					converted_bone_without_side = "ThumbMetacarpal"
-				if bone_without_side == "ThumbIntermediate":
-					converted_bone_without_side = "ThumbProximal"
-
-				actual_bone_name = bone_side + converted_bone_without_side
+		if actual_bone_name.contains("Thumb"):
+			actual_bone_name = actual_bone_name \
+				.replace("Proximal", "Metacarpal") \
+				.replace("Intermediate", "Proximal")
 
 		var bone_index : int = skel.find_bone(actual_bone_name)
 		if bone_index != -1:
