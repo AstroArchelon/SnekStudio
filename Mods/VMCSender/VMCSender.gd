@@ -4,6 +4,10 @@ var target_ip : String = "127.0.0.1"
 var target_port : int = 39539
 var vmc_sender_enabled : bool = false
 
+# PoseIK applies an offset to the entire model.
+# This sends it as the hips offset.
+var send_hips_offset_from_model : bool = false
+
 # List from the VRM spec:
 # https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.bone.schema.json
 const _humanoid_bone_list : PackedStringArray = [
@@ -55,6 +59,8 @@ func _ready() -> void:
 	add_tracked_setting("target_port", "Reciever port")
 	add_tracked_setting("vmc_sender_enabled", "Sender enabled")
 
+	add_tracked_setting("send_hips_offset_from_model", "Send hip offset from model")
+	
 	update_settings_ui()
 
 func load_after(_settings_old : Dictionary, _settings_new : Dictionary) -> void:
@@ -104,6 +110,9 @@ func _physics_process(delta: float) -> void:
 			var transformed_pose : Transform3D = global_rest * rest.inverse() * pose * global_rest.inverse()
 			var rotation_quat : Quaternion = transformed_pose.basis.get_rotation_quaternion()
 			var origin : Vector3 = pose.origin
+
+			if actual_bone_name == "Hips" and send_hips_offset_from_model:
+				origin += get_model().transform.origin
 
 			# Shuffle stuff around into the coordinate space that VMC expects.
 			rotation_quat.y *= -1
