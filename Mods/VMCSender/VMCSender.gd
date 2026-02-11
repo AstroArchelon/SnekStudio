@@ -35,7 +35,7 @@ const _humanoid_bone_list : PackedStringArray = [
 	"RightLittleProximal", "RightLittleIntermediate", "RightLittleDistal",
 	"UpperChest"]
 
-const _vrm_1_to_0_blend_shape_map : Dictionary = {
+const _vrm_1_to_0_blend_shape_map : Dictionary[String, String] = {
 	"neutral" : "Neutral",
 	"aa" : "A",
 	"ih" : "I",
@@ -74,49 +74,48 @@ func load_after(_settings_old : Dictionary, _settings_new : Dictionary) -> void:
 func _physics_process(_delta: float) -> void:
 	var skel : Skeleton3D = get_skeleton()
 
-	#for bone_index in range(0, skel.get_bone_count()):
-	for bone_name in _humanoid_bone_list:
-		var actual_bone_name : String = bone_name
+	for vmc_bone_name in _humanoid_bone_list:
+		var model_bone_name : String = vmc_bone_name
 
-		# We may have to rename some thumb bone names, depending on whether we
-		# have a VRM 1.0 or 0.0 model.
-		if actual_bone_name.contains("Thumb"):
-			actual_bone_name = actual_bone_name \
+		# VRM 1.0 has different thumb bone names.
+		if model_bone_name.contains("Thumb"):
+			model_bone_name = model_bone_name \
 				.replace("Proximal", "Metacarpal") \
 				.replace("Intermediate", "Proximal")
 
-		var bone_index : int = skel.find_bone(actual_bone_name)
-		if bone_index != -1:
+		var bone_index : int = skel.find_bone(model_bone_name)
+		if bone_index == -1:
+			continue
 
-			var global_rest : Transform3D = skel.get_bone_global_rest(bone_index)
-			var rest : Transform3D = skel.get_bone_rest(bone_index)
-			var pose : Transform3D = skel.get_bone_pose(bone_index)
+		var global_rest : Transform3D = skel.get_bone_global_rest(bone_index)
+		var rest : Transform3D = skel.get_bone_rest(bone_index)
+		var pose : Transform3D = skel.get_bone_pose(bone_index)
 
-			var transformed_pose : Transform3D = global_rest * rest.inverse() * pose * global_rest.inverse()
-			var rotation_quat : Quaternion = transformed_pose.basis.get_rotation_quaternion()
-			var origin : Vector3 = pose.origin
+		var transformed_pose : Transform3D = global_rest * rest.inverse() * pose * global_rest.inverse()
+		var rotation_quat : Quaternion = transformed_pose.basis.get_rotation_quaternion()
+		var origin : Vector3 = pose.origin
 
-			if actual_bone_name == "Hips" and send_hips_offset_from_model:
-				origin += get_model().transform.origin
+		if model_bone_name == "Hips" and send_hips_offset_from_model:
+			origin += get_model().transform.origin
 
-			# Shuffle stuff around into the coordinate space that VMC expects.
-			rotation_quat.y *= -1
-			rotation_quat.z *= -1
-			origin.x *= -1
+		# Shuffle stuff around into the coordinate space that VMC expects.
+		rotation_quat.y *= -1
+		rotation_quat.z *= -1
+		origin.x *= -1
 
-			$KiriOSClient.send_osc_message("/VMC/Ext/Bone/Pos", "sfffffff", [
-				bone_name,
-				origin.x, origin.y, origin.z,
-				rotation_quat.x, rotation_quat.y, rotation_quat.z, rotation_quat.w])
+		$KiriOSClient.send_osc_message("/VMC/Ext/Bone/Pos", "sfffffff", [
+			vmc_bone_name,
+			origin.x, origin.y, origin.z,
+			rotation_quat.x, rotation_quat.y, rotation_quat.z, rotation_quat.w])
 
 	var blend_shapes_to_apply : Dictionary = get_global_mod_data("BlendShapes")
-	for shape_name in blend_shapes_to_apply:
-		var shape_name_mapped : String = shape_name
-		if shape_name_mapped in _vrm_1_to_0_blend_shape_map:
-			shape_name_mapped = _vrm_1_to_0_blend_shape_map[shape_name]
+	for model_shape_name in blend_shapes_to_apply:
+		var vmc_shape_name : String = model_shape_name
+		if model_shape_name in _vrm_1_to_0_blend_shape_map:
+			vmc_shape_name = _vrm_1_to_0_blend_shape_map[model_shape_name]
 
 		$KiriOSClient.send_osc_message("/VMC/Ext/Blend/Val", "sf", [
-			shape_name_mapped,
-			blend_shapes_to_apply[shape_name]])
+			vmc_shape_name,
+			blend_shapes_to_apply[model_shape_name]])
 
 	$KiriOSClient.send_osc_message("/VMC/Ext/Blend/Apply", "", [])
