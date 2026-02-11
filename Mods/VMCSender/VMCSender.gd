@@ -71,10 +71,9 @@ func load_after(_settings_old : Dictionary, _settings_new : Dictionary) -> void:
 		else:
 			$KiriOSClient.stop_client()
 
-func _process(_delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	var skel : Skeleton3D = get_skeleton()
 
-	#for bone_index in range(0, skel.get_bone_count()):
 	for vmc_bone_name in _humanoid_bone_list:
 		var model_bone_name : String = vmc_bone_name
 
@@ -112,7 +111,7 @@ func _process(_delta: float) -> void:
 	var blend_shapes_to_apply : Dictionary = get_global_mod_data("BlendShapes")
 	for model_shape_name in blend_shapes_to_apply:
 		var vmc_shape_name : String = model_shape_name
-		if vmc_shape_name in _vrm_1_to_0_blend_shape_map:
+		if model_shape_name in _vrm_1_to_0_blend_shape_map:
 			vmc_shape_name = _vrm_1_to_0_blend_shape_map[model_shape_name]
 
 		$KiriOSClient.send_osc_message("/VMC/Ext/Blend/Val", "sf", [
