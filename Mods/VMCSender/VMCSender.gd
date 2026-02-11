@@ -7,29 +7,29 @@ var vmc_sender_enabled : bool = false
 # List from the VRM spec:
 # https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.bone.schema.json
 const _humanoid_bone_list : PackedStringArray = [
-	"hips",
-	"leftUpperLeg", "rightUpperLeg",
-	"leftLowerLeg", "rightLowerLeg",
-	"leftFoot", "rightFoot",
-	"spine", "chest", "neck", "head",
-	"leftShoulder", "rightShoulder",
-	"leftUpperArm", "rightUpperArm",
-	"leftLowerArm", "rightLowerArm",
-	"leftHand", "rightHand",
-	"leftToes", "rightToes",
-	"leftEye", "rightEye",
-	"jaw",
-	"leftThumbProximal", "leftThumbIntermediate", "leftThumbDistal",
-	"leftIndexProximal", "leftIndexIntermediate", "leftIndexDistal",
-	"leftMiddleProximal", "leftMiddleIntermediate", "leftMiddleDistal",
-	"leftRingProximal", "leftRingIntermediate", "leftRingDistal",
-	"leftLittleProximal", "leftLittleIntermediate", "leftLittleDistal",
-	"rightThumbProximal", "rightThumbIntermediate", "rightThumbDistal",
-	"rightIndexProximal", "rightIndexIntermediate", "rightIndexDistal",
-	"rightMiddleProximal", "rightMiddleIntermediate","rightMiddleDistal",
-	"rightRingProximal", "rightRingIntermediate", "rightRingDistal",
-	"rightLittleProximal", "rightLittleIntermediate", "rightLittleDistal",
-	"upperChest"]
+	"Hips",
+	"LeftUpperLeg", "RightUpperLeg",
+	"LeftLowerLeg", "RightLowerLeg",
+	"LeftFoot", "RightFoot",
+	"Spine", "Chest", "Neck", "Head",
+	"LeftShoulder", "RightShoulder",
+	"LeftUpperArm", "RightUpperArm",
+	"LeftLowerArm", "RightLowerArm",
+	"LeftHand", "RightHand",
+	"LeftToes", "RightToes",
+	"LeftEye", "RightEye",
+	"Jaw",
+	"LeftThumbProximal", "LeftThumbIntermediate", "LeftThumbDistal",
+	"LeftIndexProximal", "LeftIndexIntermediate", "LeftIndexDistal",
+	"LeftMiddleProximal", "LeftMiddleIntermediate", "LeftMiddleDistal",
+	"LeftRingProximal", "LeftRingIntermediate", "LeftRingDistal",
+	"LeftLittleProximal", "LeftLittleIntermediate", "LeftLittleDistal",
+	"RightThumbProximal", "RightThumbIntermediate", "RightThumbDistal",
+	"RightIndexProximal", "RightIndexIntermediate", "RightIndexDistal",
+	"RightMiddleProximal", "RightMiddleIntermediate","RightMiddleDistal",
+	"RightRingProximal", "RightRingIntermediate", "RightRingDistal",
+	"RightLittleProximal", "RightLittleIntermediate", "RightLittleDistal",
+	"UpperChest"]
 
 const _vrm_1_to_0_blend_shape_map : Dictionary = {
 	"neutral" : "Neutral",
@@ -50,19 +50,10 @@ const _vrm_1_to_0_blend_shape_map : Dictionary = {
 	"blinkLeft" : "Blink_L",
 	"blinkRight" : "Blink_R" }
 
-# These are the names to match, along with their first-letter-uppercased
-# versions.
-var _humanoid_bone_dict_lowercase_to_upper_first_letter : Dictionary = {}
-
 func _ready() -> void:
 	add_tracked_setting("target_ip", "Reciever IP address")
 	add_tracked_setting("target_port", "Reciever port")
 	add_tracked_setting("vmc_sender_enabled", "Sender enabled")
-
-	for bone_name in _humanoid_bone_list:
-		var bone_name_upper_first_letter : String = bone_name[0].to_upper() + bone_name.substr(1)
-		_humanoid_bone_dict_lowercase_to_upper_first_letter[bone_name.to_lower()] = \
-			bone_name_upper_first_letter
 
 	update_settings_ui()
 
@@ -79,9 +70,7 @@ func _physics_process(delta: float) -> void:
 
 	#for bone_index in range(0, skel.get_bone_count()):
 	for bone_name in _humanoid_bone_list:
-		var bone_name_lower : String = bone_name.to_lower()
-		var bone_name_upper_first_letter : String = _humanoid_bone_dict_lowercase_to_upper_first_letter[bone_name_lower]
-		var actual_bone_name : String = bone_name_upper_first_letter
+		var actual_bone_name : String = bone_name
 
 		# We may have to rename some thumb bone names, depending on whether we
 		# have a VRM 1.0 or 0.0 model.
@@ -122,7 +111,7 @@ func _physics_process(delta: float) -> void:
 			origin.x *= -1
 
 			$KiriOSClient.send_osc_message("/VMC/Ext/Bone/Pos", "sfffffff", [
-				bone_name_upper_first_letter,
+				bone_name,
 				origin.x, origin.y, origin.z,
 				rotation_quat.x, rotation_quat.y, rotation_quat.z, rotation_quat.w])
 
